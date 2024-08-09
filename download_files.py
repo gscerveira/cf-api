@@ -1,22 +1,39 @@
 import requests
 import os
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
-# Find all files available in https://data.pandonia-global-network.org/calibrationfiles/
-url = 'https://data.pandonia-global-network.org/calibrationfiles/'
-response = requests.get(url)
 
-files = [url + file for file in response.text.split('href="')[1:] if file.endswith('.txt')]
-
-# Download all files to a directory called 'calibration_files', create it if it doesn't exist
-if not os.path.exists('calibration_files'):
-    os.makedirs('calibration_files')
+def get_calibration_files():
+    base_url = 'https://data.pandonia-global-network.org/calibrationfiles/'
+    response = requests.get(base_url)
+    soup = BeautifulSoup(response.content, 'html.parser')
     
-for file in files:
-    filename = file.split('/')[-1]
-    filepath = os.path.join('calibration_files', filename)
-    response = requests.get(file)
-    with open(filepath, 'wb') as f:
-        f.write(response.content)
+    files = []
+    for link in soup.select('a'):
+        href = link.get('href')
+        if href and href.endswith('.txt'):
+            full_url = urljoin(base_url, href)
+            files.append(full_url)
+    
+    return files
+
+
+def download_files(files):
+    if not os.path.exists('calibration_files'):
+        os.makedirs('calibration_files')
+    
+    for file in files:
+        filename = file.split('/')[-1]
+        filepath = os.path.join('calibration_files', filename)
+        response = requests.get(file)
+        with open(filepath, 'wb') as f:
+            f.write(response.content)
+        print(f"Downloaded: {filename}")
+        
+if __name__ == "__main__":
+    files = get_calibration_files()
+    download_files(files)
     
 
 
