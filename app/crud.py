@@ -86,7 +86,7 @@ def query_calibration_files(
                 })
         return filtered_results
     else:
-        [{
+        return [{
             "filename": cf.filename,
             "pandora_id": cf.pandora_id,
             "spectrometer_id": cf.spectrometer_id,
