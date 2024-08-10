@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 from . import models
 import os
-import json
 from datetime import datetime
 from parse import parse
+from typing import Optional
 
 def parse_filename(filename):
     # Example filename: PandoraXsY_CF_vZdYYYYMMDD.txt
@@ -45,35 +46,53 @@ def parse_and_store_calibration_file(db: Session, file_path: str):
     db.refresh(db_cf)
     return db_cf
 
-def query_calibration_files(db: Session, key: str):
-    results = []
-    cfs = db.query(models.CalibrationFile).all()
-    for cf in cfs:
-        if key in cf.content:
-            results.append({
-                "filename": cf.filename,
-                "pandora_id": cf.pandora_id,
-                "spectrometer_id": cf.spectrometer_id,
-                "version": cf.version,
-                "validity_date": cf.validity_date.isoformat(),
-                key: cf.content[key]
-            })
-            
-    return results
-
-def get_calibration_file(db: Session, filename: str):
-    return db.query(models.CalibrationFile).filter(models.CalibrationFile.filename == filename).first()
-
-def get_key_from_file(db: Session, filename: str, key: str):
-    cf = get_calibration_file(db, filename)
-    if cf and key in cf.content:
-        return {
+def query_calibration_files(
+    db: Session,
+    filename: Optional[str] = None,
+    pandora_id: Optional[int] = None,
+    spectrometer_id: Optional[int] = None,
+    version: Optional[int] = None,
+    validity_date: Optional[str] = None,
+    key: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0
+):
+    query = db.query(models.CalibrationFile)
+    
+    if filename:
+        query = query.filter(models.CalibrationFile.filename == filename)
+    if pandora_id:
+        query = query.filter(models.CalibrationFile.pandora_id == pandora_id)
+    if spectrometer_id:
+        query = query.filter(models.CalibrationFile.spectrometer_id == spectrometer_id)
+    if version:
+        query = query.filter(models.CalibrationFile.version == version)
+    if validity_date:
+        query = query.filter(models.CalibrationFile.validity_date == datetime.strptime(validity_date, "%Y-%m-%d").date())
+    
+    results = query.offset(offset).limit(limit).all()
+    
+    if key:
+        filtered_results = []
+        for cf in results:
+            if key in cf.content:
+                filtered_results.append({
+                    "filename": cf.filename,
+                    "pandora_id": cf.pandora_id,
+                    "spectrometer_id": cf.spectrometer_id,
+                    "version": cf.version,
+                    "validity_date": cf.validity_date.isoformat(),
+                    key: cf.content[key]
+                })
+        return filtered_results
+    else:
+        [{
             "filename": cf.filename,
             "pandora_id": cf.pandora_id,
             "spectrometer_id": cf.spectrometer_id,
             "version": cf.version,
             "validity_date": cf.validity_date.isoformat(),
-            key: cf.content[key]
-        }
-    return None
+            "content": cf.content
+        } for cf in results]
+    
     
