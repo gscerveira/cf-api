@@ -29,8 +29,8 @@ def parse_and_store_calibration_file(db: Session, file_path: str):
     content = {}
     with open(file_path, 'r') as file:
         for line in file:
-            if ' -> ' in line:
-                key, value = line.strip().split(' -> ')
+            if ' ->' in line:
+                key, value = line.strip().split(' ->')
                 content[key.strip()] = value.strip()
                 
     db_cf = models.CalibrationFile(

@@ -1,8 +1,9 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from . import models, crud
 from .database import SessionLocal, engine
 import os
+from typing import Optional
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -28,13 +29,20 @@ def parse_calibration_files(db: Session = Depends(get_db)):
         file_path = os.path.join(calibration_folder, file)
         cf_data = crud.parse_and_store_calibration_file(db, file_path)
         parsed_files.append(cf_data)
+        print(f"Parsed: {file}")
         
     return {"message": f"Parsed {len(parsed_files)} calibration files"}
 
-@app.get("/get_calibration_key/")
-def get_calibration_files(key: str, db: Session = Depends(get_db)):
-    results = crud.query_calibration_files(db, key)
-    return results
-
-@app.get("/calibration_file/{filename}")
-def get
+@app.get("/calibration_files/")
+def query_calibration_files(
+    db: Session = Depends(get_db),
+    filename: Optional[str] = Query(None),
+    pandora_id: Optional[int] = Query(None),
+    spectrometer_id: Optional[int] = Query(None),
+    version: Optional[int] = Query(None),
+    validity_date: Optional[str] = Query(None),
+    key: Optional[str] = Query(None),
+    limit: int = Query(100, ge=1),
+    offset: int = Query(0, ge=0)    
+):
+    return crud.query_calibration_files(db, filename, pandora_id, spectrometer_id, version, validity_date, key, limit, offset)
