@@ -13,8 +13,9 @@ def get_calibration_files():
     for link in soup.select('a'):
         href = link.get('href')
         if href and href.endswith('.txt'):
-            full_url = urljoin(base_url, href)
-            files.append(full_url)
+            if 'disused' not in href:
+                full_url = urljoin(base_url, href)
+                files.append(full_url)
     
     return files
 
