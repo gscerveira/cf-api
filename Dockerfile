@@ -24,6 +24,9 @@ RUN addgroup -g $GROUP_ID myuser && \
 # Change ownership of the working directory to the created user
 RUN chown -R myuser:myuser /cf-api
 
+# Create the database directory and set permissions
+RUN mkdir -p /cf-api/data && chown -R myuser:myuser /cf-api/data
+
 # Switch to the created user
 USER myuser
 
