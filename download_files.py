@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 
-def get_calibration_files():
+def get_calibration_files(limit=20):
     base_url = 'https://data.pandonia-global-network.org/calibrationfiles/'
     response = requests.get(base_url)
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -17,7 +17,7 @@ def get_calibration_files():
                 full_url = urljoin(base_url, href)
                 files.append(full_url)
     
-    return files
+    return files[:limit]
 
 
 def download_files(files):
@@ -33,7 +33,8 @@ def download_files(files):
         print(f"Downloaded: {filename}")
         
 if __name__ == "__main__":
-    files = get_calibration_files()
+    files_limit = int(input("Enter the number of files to download: "))
+    files = get_calibration_files(files_limit)
     download_files(files)
     
 

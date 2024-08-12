@@ -22,7 +22,7 @@ def parse_calibration_files(db: Session = Depends(get_db)):
     if not os.path.exists(calibration_folder):
         raise HTTPException(status_code=404, detail="Calibration files folder not found")
     
-    files = [f for f in os.listdir(calibration_folder) if f.endswith('.txt')][:20]
+    files = [f for f in os.listdir(calibration_folder) if f.endswith('.txt')]
     parsed_files = []
     
     for file in files:
