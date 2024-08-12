@@ -163,3 +163,4 @@ cython_debug/
 
 cf-api/
 calibration_files/
+calibration_files.db
